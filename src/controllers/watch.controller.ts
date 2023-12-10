@@ -133,21 +133,22 @@ export class WatchController {
 
         const embed = new EmbedBuilder();
         embed.setTitle('**New Thera connection scouted**');
-        embed.setColor(WatchController.getSecurityStatusColour(wormhole.destinationSolarSystem.security));
 
-        const securityStatus = WatchController.getSecurityStatusText(wormhole.destinationSolarSystem.security);
+        embed.setColor(WatchController.getSecurityStatusColour(wormhole.securitystatus));
+
+        const securityStatus = WatchController.getSecurityStatusText(wormhole.in_system_id);
 
         embed.addFields([
-            {inline: true, name: '**Region**', value: wormhole.destinationSolarSystem.region.name},
-            {inline: true, name: '**System**', value: `${wormhole.destinationSolarSystem.name} (${securityStatus})`},
+            {inline: true, name: '**Region**', value: wormhole.in_region_name},
+            {inline: true, name: '**System**', value: `${wormhole.in_system_name} (${securityStatus})`},
             {name: '\u200B', value: '\u200B'},
-            {inline: true, name: '**Signature**', value: `\`${wormhole.wormholeDestinationSignatureId}\` - \`${wormhole.signatureId}\``},
+            {inline: true, name: '**Signature**', value: `\`${wormhole.in_signature}\` - \`${wormhole.out_signature}\``},
             {inline: true, name: '**Size**', value: [
                 `${this.getMass(wormhole.sourceWormholeType.jumpMass)}kg`, wormhole.wormholeMass,
             ].join('\n')},
             {inline: true, name: '**Type**', value: `\`${wormhole.sourceWormholeType.name}\``},
             {name: '\u200B', value: '\u200B'},
-            {name: '**Estimated Life**', value: `${countdown(new Date(wormhole.wormholeEstimatedEol), undefined, this.countdownUnits)}`},
+            {name: '**Estimated Life**', value: `${countdown(new Date(wormhole.expires_at), undefined, this.countdownUnits)}`},
         ]);
 
         embed.setFooter({
@@ -156,7 +157,7 @@ export class WatchController {
         });
         embed.setTimestamp();
 
-        this.debug(`Sending messages for WH ${wormhole.sourceWormholeType.name} to ${channels.length} channels (before filtering).`);
+        this.debug(`Sending messages for WH ${wormhole.wh_type} to ${channels.length} channels (before filtering).`);
 
         return Promise.all(channels.map(async (channel) => {
             const channelModel = await ChannelModel.findOne({where: [{identifier: channel.id}]});
@@ -220,7 +221,7 @@ export class WatchController {
             allowedSecurity.push(securityStatusFilter.filter);
         }
 
-        const isWormholeSystem = this.wormholeSystemRegex.test(wormhole.destinationSolarSystem.name);
+        const isWormholeSystem = this.wormholeSystemRegex.test(wormhole.out_system_name);
         if (allowedSecurity.length === 0 && wormholeSpace && !isWormholeSystem) {
             return true;
         }
@@ -247,14 +248,15 @@ export class WatchController {
 
         const systemFilters = filters.filter((filter) => filter.type === FilterType.SYSTEM);
         for (const systemFilter of systemFilters) {
-            if (wormhole.destinationSolarSystem.name.toLowerCase() === systemFilter.filter) {
+            if (wormhole.in_system_name.toLowerCase() === systemFilter.filter) {
                 return false;
             }
         }
 
         const constellationFilters = filters.filter((filter) => filter.type === FilterType.CONSTELLATION);
         for (const constellationFilter of constellationFilters) {
-            const constellationName = await this.namesService.getName(wormhole.destinationSolarSystem.constellationID);
+            const constellationId = await this.namesService.getConstellationId(wormhole.in_system_id);
+            const constellationName = await this.namesService.getConstellationName(constellationId!);
             if (constellationName && constellationName.toLowerCase() === constellationFilter.filter) {
                 return false;
             }
@@ -262,7 +264,7 @@ export class WatchController {
 
         const regionFilters = filters.filter((filter) => filter.type === FilterType.REGION);
         for (const regionFilter of regionFilters) {
-            if (wormhole.destinationSolarSystem.region.name.toLowerCase() === regionFilter.filter) {
+            if (wormhole.in_region_name.toLowerCase() === regionFilter.filter) {
                 return false;
             }
         }

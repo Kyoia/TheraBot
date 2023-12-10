@@ -1,5 +1,5 @@
 import { PublicESIService } from '@ionaru/esi-service';
-import { EVE, IUniverseTypeData } from '@ionaru/eve-utils';
+import { EVE, IUniverseTypeData, IUniverseSystemData } from '@ionaru/eve-utils';
 
 import { debug } from '../debug';
 
@@ -21,4 +21,28 @@ export class NamesService {
 
         return response ? response.name : undefined;
     }
+
+    public async getConstellationId(id: number): Promise<number | undefined> {
+        this.debug('getConstellationId');
+
+        const url = EVE.getUniverseSystemUrl(id);
+        // eslint-disable-next-line unicorn/no-useless-undefined
+        const response = await this.publicESIService.fetchESIData<IUniverseSystemData>(url).catch(() => undefined);
+
+        return response ? response.constellation_id : undefined;
+    }
+
+    public async getConstellationName(id: number): Promise<string | undefined> {
+        this.debug('getConstellationName');
+
+        const url = EVE.getUniverseConstellationUrl(id);
+        // eslint-disable-next-line unicorn/no-useless-undefined
+        const response = await this.publicESIService.fetchESIData<IUniverseTypeData>(url).catch(() => undefined);
+
+        return response ? response.name : undefined;
+    }
+
+    
+
+
 }

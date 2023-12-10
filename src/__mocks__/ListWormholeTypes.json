@@ -1,0 +1,18 @@
+{
+    "comment_public": "string",
+    "identifier": "string",
+    "mass_regeneration": 0,
+    "max_jump_mass": 0,
+    "max_stable_mass": 0,
+    "max_stable_time": 0,
+    "possible_static": false,
+    "signature_level": [
+    0
+    ],
+    "source": [
+    "c12"
+    ],
+    "target_system_class": "c12",
+    "type_id": 0,
+    "wandering_only": false
+}
